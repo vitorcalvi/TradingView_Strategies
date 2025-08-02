@@ -3,36 +3,35 @@ name: Deploy static site to Pages
 
 on:
   push:
-    branches: [ main ]     # or your default branch
-  workflow_dispatch:       # allows manual runs from Actions tab
+    branches: ["main"]          # change if your default branch is different
+  workflow_dispatch:            # manual trigger from the Actions tab
 
 permissions:
-  contents: read           # to fetch code
-  pages: write             # to push the site
-  id-token: write          # to authenticate the deployment
+  contents: read                # to fetch code
+  pages: write                  # to publish
+  id-token: write               # to authenticate the deployment
 
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # No build step needed for plain HTML/CSS; we just upload everything
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v2
-        with:
-          path: "."         # “.” = repo root; adjust if your site lives elsewhere
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+
+      # Sets up the Pages env vars (must run in SAME job as deploy-pages)
+      - uses: actions/configure-pages@v5
+
+      # Packages everything in repo root (contains index.html)
+      - uses: actions/upload-pages-artifact@v2
+        with:
+          path: "."              # adjust if your site lives elsewhere
+
+      # Publishes the artifact
       - id: deployment
         uses: actions/deploy-pages@v3
